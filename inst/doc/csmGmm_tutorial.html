@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Ryan Sun" />
+
+<meta name="date" content="2024-12-02" />
+
+<title>csmGmm Tutorial</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">csmGmm Tutorial</h1>
+<h4 class="author">Ryan Sun</h4>
+<h4 class="date">2024-12-02</h4>
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The csmGmm package implements the conditionally symmetric
+multidimensional Gaussian mixture model (csmGmm) for large-scale testing
+of composite null hypotheses in genetic association applications such as
+mediation analysis, pleiotropy analysis, and replication analysis. In
+such analyses, we typically have K sets of test statistics corresponding
+to the same J genetic variants, where K is a small number (e.g. 2 or 3)
+and J is large (e.g. 1 million). For each SNP, we want to know if we can
+reject all K individual nulls.</p>
+<p>For example, in a genetic mediation study, the goal is often to
+determine whether a single nucleotide polymorphism’s (SNP) effect on
+disease risk is mediated through expression of a risk gene. In other
+words, the SNP affects gene expression, which perturbs disease risk. To
+do this analysis, we test the effect of the SNP on gene expression in a
+standard regression model, and then we can test the effect of the gene
+expression on disease risk in another regression model. Then we have two
+test statistics, and under some assumptions, there is a mediated effect
+if we can reject the null for each individual test statistic.</p>
+<p>In a pleiotropy study, we want to know if the same SNP affects risk
+of two different diseases. We can fit two regression models, one for the
+effect of the SNP on the first disease, and one for the effect of the
+SNP on the second disease. The SNP is said to be pleiotropic if we can
+reject both individual nulls. There may also be more than two diseases
+of interest. The csmGmm allows for this. Test statistics for the two
+diseases may come from the same dataset, and thus they would be
+correlated. The c-csmGmm can handle this situation.</p>
+<p>In a replication study, we want to know if the same SNP is associated
+with a disease in two independent datasets. We fit two regression
+models, and the SNP is said to be replicated if we can reject both
+individual nulls and the direction of effects is the same. The r-csmGmm
+is used for this situation.</p>
+<p>The local false discovery rate is used to perform inference. Each set
+of test statistics receives an lfdr-value. We then sort the lfdr-values
+in increasing order. For a given false discovery rate <span class="math inline">\(q\)</span>, we reject the first <span class="math inline">\(r\)</span> sets, where <span class="math inline">\(r\)</span> is the largest index such that the
+average of the first <span class="math inline">\(r\)</span> lfdr-values
+is less than or equal to <span class="math inline">\(q\)</span>.</p>
+</div>
+<div id="worked-example-of-csmgmm" class="section level2">
+<h2>Worked Example of csmGmm</h2>
+<p>Suppose we are performing a mediation study with one SNP and 40,000
+gene expressions of interest. We generate 40,000 sets of two test
+statistics (a 40,000*2 matrix). Of these 40,000 sets, let 2% have an
+association in the first column only, 2% have an association in the
+second column only, and 0.2% have an association in both columns. The
+other 95.8% have no association in either column.</p>
+<p>When using a nominal false discovery rate of <span class="math inline">\(q=0.1\)</span>, we can see that the model makes 71
+correct rejections and 8 incorrect rejections, for a false discovery
+proportion of 8/79=0.0101 in this example. There were 80 causal sets,
+and the csmGmm found 71 of them. For full simulation results, please see
+our manuscript.</p>
+<p>Note that we made the problem even more difficult here by generating
+all associations with a positive effect size (instead of half negative
+and half positive, which would be more symmetrical). Still, the csmGmm
+worked well.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(csmGmm)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code></pre></div>
+<pre><code>## 
+## Attaching package: &#39;dplyr&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:stats&#39;:
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># number of SNPs and proportion in each case</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>J <span class="ot">&lt;-</span> <span class="dv">40000</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>K <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>case0 <span class="ot">&lt;-</span> <span class="fl">0.958</span> <span class="sc">*</span> J</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>case1 <span class="ot">&lt;-</span> <span class="fl">0.02</span> <span class="sc">*</span> J</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>case2 <span class="ot">&lt;-</span> <span class="fl">0.02</span> <span class="sc">*</span> J</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>case3 <span class="ot">&lt;-</span> <span class="fl">0.002</span> <span class="sc">*</span> J</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co"># effect size of association</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>effSize <span class="ot">&lt;-</span> <span class="dv">4</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co"># generate data</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">0</span>)</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>medDat <span class="ot">&lt;-</span> <span class="fu">rbind</span>(<span class="fu">cbind</span>(<span class="fu">rnorm</span>(<span class="at">n=</span>case0), <span class="fu">rnorm</span>(<span class="at">n=</span>case0)),</span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>                <span class="fu">cbind</span>(<span class="fu">rnorm</span>(<span class="at">n=</span>case1, <span class="at">mean=</span>effSize), <span class="fu">rnorm</span>(<span class="at">n=</span>case1)),</span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>                <span class="fu">cbind</span>(<span class="fu">rnorm</span>(<span class="at">n=</span>case2), <span class="fu">rnorm</span>(<span class="at">n=</span>case2, <span class="at">mean=</span>effSize)),</span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>                <span class="fu">cbind</span>(<span class="fu">rnorm</span>(<span class="at">n=</span>case3, <span class="at">mean=</span>effSize), <span class="fu">rnorm</span>(<span class="at">n=</span>case3, <span class="at">mean=</span>effSize)))</span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co"># intial starting values</span></span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a>maxMeans <span class="ot">=</span> <span class="fu">matrix</span>(<span class="at">data=</span><span class="fu">c</span>(<span class="dv">8</span>,<span class="dv">8</span>), <span class="at">nrow=</span><span class="dv">2</span>)</span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a>initMuList <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">matrix</span>(<span class="at">data=</span><span class="dv">0</span>, <span class="at">nrow=</span><span class="dv">2</span>, <span class="at">ncol=</span><span class="dv">1</span>), <span class="fu">matrix</span>(<span class="at">data=</span><span class="fu">runif</span>(<span class="at">n=</span><span class="dv">4</span>, <span class="at">min=</span><span class="dv">0</span>, <span class="at">max=</span><span class="fu">min</span>(maxMeans)), <span class="at">nrow=</span><span class="dv">2</span>, <span class="at">ncol=</span><span class="dv">2</span>), <span class="fu">matrix</span>(<span class="at">data=</span><span class="fu">runif</span>(<span class="at">n=</span><span class="dv">4</span>, <span class="at">min=</span><span class="dv">0</span>, <span class="at">max=</span><span class="fu">min</span>(maxMeans)), <span class="at">nrow=</span><span class="dv">2</span>, <span class="at">ncol=</span><span class="dv">2</span>), maxMeans)</span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a>initPiList <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="fl">0.82</span>), <span class="fu">c</span>(<span class="fl">0.02</span>, <span class="fl">0.02</span>),<span class="fu">c</span>(<span class="fl">0.02</span>, <span class="fl">0.02</span>), <span class="fu">c</span>(<span class="fl">0.1</span>))</span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co"># fit the model</span></span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a>csmGmmOutput <span class="ot">&lt;-</span> <span class="fu">symm_fit_ind_EM</span>(<span class="at">testStats =</span> medDat, <span class="at">initMuList =</span> initMuList, <span class="at">initPiList =</span> initPiList,</span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a>                                <span class="at">checkpoint=</span><span class="cn">FALSE</span>)</span>
+<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a></span>
+<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a><span class="co"># rejections at q=0.1</span></span>
+<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a>outputDF <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Z1 =</span> medDat[, <span class="dv">1</span>], <span class="at">Z2 =</span> medDat[, <span class="dv">2</span>], <span class="at">origIdx =</span> <span class="dv">1</span><span class="sc">:</span>J,</span>
+<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a>                         <span class="at">lfdrValue=</span>csmGmmOutput<span class="sc">$</span>lfdrResults) <span class="sc">%&gt;%</span></span>
+<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a>    <span class="fu">arrange</span>(lfdrValue) <span class="sc">%&gt;%</span></span>
+<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">lfdrAvg =</span> <span class="fu">cummean</span>(lfdrValue)) <span class="sc">%&gt;%</span></span>
+<span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">Causal =</span> <span class="fu">ifelse</span>(origIdx <span class="sc">&gt;=</span> J <span class="sc">-</span> case3 <span class="sc">+</span> <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb5-32"><a href="#cb5-32" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">Rej =</span> <span class="fu">ifelse</span>(lfdrAvg <span class="sc">&lt;</span> <span class="fl">0.1</span>, <span class="dv">1</span>, <span class="dv">0</span>))</span>
+<span id="cb5-33"><a href="#cb5-33" tabindex="-1"></a></span>
+<span id="cb5-34"><a href="#cb5-34" tabindex="-1"></a><span class="co"># number of false rejections</span></span>
+<span id="cb5-35"><a href="#cb5-35" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">which</span>(outputDF<span class="sc">$</span>Causal <span class="sc">==</span> <span class="dv">0</span> <span class="sc">&amp;</span> outputDF<span class="sc">$</span>Rej <span class="sc">==</span> <span class="dv">1</span>))</span></code></pre></div>
+<pre><code>## [1] 8</code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># number of true rejections</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">which</span>(outputDF<span class="sc">$</span>Causal <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;</span> outputDF<span class="sc">$</span>Rej <span class="sc">==</span> <span class="dv">1</span>))</span></code></pre></div>
+<pre><code>## [1] 71</code></pre>
+</div>
+<div id="worked-example-of-c-csmgmm" class="section level2">
+<h2>Worked Example of c-csmGmm</h2>
+<p>Sometimes the test statistics in a set may be correlated. Suppose we
+have 100,000 SNPs in a pleiotropy study of two correlated outcomes in
+the same dataset. We let the two test statistics be correlated at <span class="math inline">\(\rho=0.3\)</span>, and we use the same proportions
+of associations as above.</p>
+<p>When using a nominal false discovery rate of <span class="math inline">\(q=0.1\)</span>, we can see that the model makes 69
+correct rejections and 5 incorrect rejections, for a false discovery
+proportion of 5/74=0.068 in this example. There were 80 causal sets, and
+the csmGmm found 69 of them. For full simulation results, please see our
+manuscript.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># number of SNPs and proportion in each case</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>J <span class="ot">&lt;-</span> <span class="dv">40000</span></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>K <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>case0 <span class="ot">&lt;-</span> <span class="fl">0.958</span> <span class="sc">*</span> J</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>case1 <span class="ot">&lt;-</span> <span class="fl">0.02</span> <span class="sc">*</span> J</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>case2 <span class="ot">&lt;-</span> <span class="fl">0.02</span> <span class="sc">*</span> J</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>case3 <span class="ot">&lt;-</span> <span class="fl">0.002</span> <span class="sc">*</span> J</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co"># effect size of association</span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>effSize <span class="ot">&lt;-</span> <span class="dv">4</span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co"># generate data</span></span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">0</span>)</span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>corMat <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="at">data=</span><span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.3</span>, <span class="fl">0.3</span>, <span class="dv">1</span>), <span class="at">nrow=</span><span class="dv">2</span>)</span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>pleioDat <span class="ot">&lt;-</span> <span class="fu">rbind</span>(mvtnorm<span class="sc">::</span><span class="fu">rmvnorm</span>(<span class="at">n=</span>case0, <span class="at">sigma=</span>corMat),</span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>                mvtnorm<span class="sc">::</span><span class="fu">rmvnorm</span>(<span class="at">n=</span>case1, <span class="at">mean=</span><span class="fu">c</span>(effSize, <span class="dv">0</span>), <span class="at">sigma=</span>corMat),</span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>                mvtnorm<span class="sc">::</span><span class="fu">rmvnorm</span>(<span class="at">n=</span>case2, <span class="at">mean=</span><span class="fu">c</span>(<span class="dv">0</span>, effSize), <span class="at">sigma=</span>corMat),</span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>                mvtnorm<span class="sc">::</span><span class="fu">rmvnorm</span>(<span class="at">n=</span>case3, <span class="at">mean=</span><span class="fu">c</span>(effSize, effSize), <span class="at">sigma=</span>corMat))</span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a></span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a><span class="co"># estimate the correlation from data</span></span>
+<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a>estCor <span class="ot">&lt;-</span> <span class="fu">cor</span>(pleioDat)[<span class="dv">1</span>,<span class="dv">2</span>]</span>
+<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a>estCorMat <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="at">data=</span><span class="fu">c</span>(<span class="dv">1</span>, estCor, estCor, <span class="dv">1</span>), <span class="at">nrow=</span><span class="dv">2</span>)</span>
+<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a></span>
+<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a><span class="co"># intial starting values</span></span>
+<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a>maxMeans <span class="ot">=</span> <span class="fu">matrix</span>(<span class="at">data=</span><span class="fu">c</span>(<span class="dv">8</span>,<span class="dv">8</span>), <span class="at">nrow=</span><span class="dv">2</span>)</span>
+<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a>initMuList <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">matrix</span>(<span class="at">data=</span><span class="dv">0</span>, <span class="at">nrow=</span><span class="dv">2</span>, <span class="at">ncol=</span><span class="dv">1</span>), <span class="fu">matrix</span>(<span class="at">data=</span><span class="fu">runif</span>(<span class="at">n=</span><span class="dv">2</span>, <span class="at">min=</span><span class="dv">0</span>, <span class="at">max=</span><span class="fu">min</span>(maxMeans)), <span class="at">nrow=</span><span class="dv">2</span>, <span class="at">ncol=</span><span class="dv">1</span>), <span class="fu">matrix</span>(<span class="at">data=</span><span class="fu">runif</span>(<span class="at">n=</span><span class="dv">2</span>, <span class="at">min=</span><span class="dv">0</span>, <span class="at">max=</span><span class="fu">min</span>(maxMeans)), <span class="at">nrow=</span><span class="dv">2</span>, <span class="at">ncol=</span><span class="dv">1</span>), maxMeans)</span>
+<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a>initPiList <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="fl">0.82</span>), <span class="fu">c</span>(<span class="fl">0.04</span>),<span class="fu">c</span>(<span class="fl">0.04</span>), <span class="fu">c</span>(<span class="fl">0.1</span>))</span>
+<span id="cb9-27"><a href="#cb9-27" tabindex="-1"></a><span class="co"># fit the model</span></span>
+<span id="cb9-28"><a href="#cb9-28" tabindex="-1"></a>c_csmGmm <span class="ot">&lt;-</span> <span class="fu">symm_fit_cor_EM</span>(<span class="at">testStats =</span> pleioDat, <span class="at">initMuList =</span> initMuList, <span class="at">initPiList =</span> initPiList,</span>
+<span id="cb9-29"><a href="#cb9-29" tabindex="-1"></a>                            <span class="at">corMat =</span> estCorMat, <span class="at">checkpoint=</span><span class="cn">FALSE</span>)</span>
+<span id="cb9-30"><a href="#cb9-30" tabindex="-1"></a></span>
+<span id="cb9-31"><a href="#cb9-31" tabindex="-1"></a><span class="co"># rejections at q=0.1</span></span>
+<span id="cb9-32"><a href="#cb9-32" tabindex="-1"></a>c_outputDF <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Z1 =</span> pleioDat[, <span class="dv">1</span>], <span class="at">Z2 =</span> pleioDat[, <span class="dv">2</span>], <span class="at">origIdx =</span> <span class="dv">1</span><span class="sc">:</span>J,</span>
+<span id="cb9-33"><a href="#cb9-33" tabindex="-1"></a>                         <span class="at">lfdrValue=</span>c_csmGmm<span class="sc">$</span>lfdrResults) <span class="sc">%&gt;%</span></span>
+<span id="cb9-34"><a href="#cb9-34" tabindex="-1"></a>    <span class="fu">arrange</span>(lfdrValue) <span class="sc">%&gt;%</span></span>
+<span id="cb9-35"><a href="#cb9-35" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">lfdrAvg =</span> <span class="fu">cummean</span>(lfdrValue)) <span class="sc">%&gt;%</span></span>
+<span id="cb9-36"><a href="#cb9-36" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">Causal =</span> <span class="fu">ifelse</span>(origIdx <span class="sc">&gt;=</span> J <span class="sc">-</span> case3 <span class="sc">+</span> <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb9-37"><a href="#cb9-37" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">Rej =</span> <span class="fu">ifelse</span>(lfdrAvg <span class="sc">&lt;</span> <span class="fl">0.1</span>, <span class="dv">1</span>, <span class="dv">0</span>))</span>
+<span id="cb9-38"><a href="#cb9-38" tabindex="-1"></a></span>
+<span id="cb9-39"><a href="#cb9-39" tabindex="-1"></a><span class="co"># number of false rejections</span></span>
+<span id="cb9-40"><a href="#cb9-40" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">which</span>(c_outputDF<span class="sc">$</span>Causal <span class="sc">==</span> <span class="dv">0</span> <span class="sc">&amp;</span> c_outputDF<span class="sc">$</span>Rej <span class="sc">==</span> <span class="dv">1</span>))</span></code></pre></div>
+<pre><code>## [1] 5</code></pre>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="co"># number of true rejections</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">which</span>(c_outputDF<span class="sc">$</span>Causal <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;</span> c_outputDF<span class="sc">$</span>Rej <span class="sc">==</span> <span class="dv">1</span>))</span></code></pre></div>
+<pre><code>## [1] 69</code></pre>
+</div>
+<div id="worked-example-of-r-csmgmm" class="section level2">
+<h2>Worked Example of r-csmGmm</h2>
+<p>When testing for replication, we reject the null only if the
+associations exist and point in the same direction. Thus in this
+example, we will generate data with both positive and negative effect
+sizes.</p>
+<p>When using a nominal false discovery rate of <span class="math inline">\(q=0.1\)</span>, we can see that the model makes 35
+correct rejections and 2 incorrect rejections, for a false discovery
+proportion of 2/35=0.057 in this example. There were 40 causal sets, and
+the r-csmGmm found 33 of them. For full simulation results, please see
+our manuscript.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="co"># number of SNPs and proportion in each case</span></span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>J <span class="ot">&lt;-</span> <span class="dv">40000</span></span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>K <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>case0 <span class="ot">&lt;-</span> <span class="fl">0.958</span> <span class="sc">*</span> J</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>case1 <span class="ot">&lt;-</span> <span class="fl">0.02</span> <span class="sc">*</span> J</span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>case2 <span class="ot">&lt;-</span> <span class="fl">0.02</span> <span class="sc">*</span> J</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>case3 <span class="ot">&lt;-</span> <span class="fl">0.002</span> <span class="sc">*</span> J</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a><span class="co"># effect size of association</span></span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>effSize <span class="ot">&lt;-</span> <span class="dv">4</span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a><span class="co"># generate data</span></span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">0</span>)</span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a>repDat <span class="ot">&lt;-</span> <span class="fu">rbind</span>(<span class="fu">cbind</span>(<span class="fu">rnorm</span>(<span class="at">n=</span>case0), <span class="fu">rnorm</span>(<span class="at">n=</span>case0)),</span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a>                <span class="fu">cbind</span>(<span class="fu">rnorm</span>(<span class="at">n=</span>case1<span class="sc">/</span><span class="dv">2</span>, <span class="at">mean=</span>effSize), <span class="fu">rnorm</span>(<span class="at">n=</span>case1<span class="sc">/</span><span class="dv">2</span>)),</span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a>                <span class="fu">cbind</span>(<span class="fu">rnorm</span>(<span class="at">n=</span>case1<span class="sc">/</span><span class="dv">2</span>, <span class="at">mean=</span><span class="sc">-</span>effSize), <span class="fu">rnorm</span>(<span class="at">n=</span>case1<span class="sc">/</span><span class="dv">2</span>)),</span>
+<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a>                <span class="fu">cbind</span>(<span class="fu">rnorm</span>(<span class="at">n=</span>case2<span class="sc">/</span><span class="dv">2</span>), <span class="fu">rnorm</span>(<span class="at">n=</span>case2<span class="sc">/</span><span class="dv">2</span>, <span class="at">mean=</span>effSize)),</span>
+<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a>                <span class="fu">cbind</span>(<span class="fu">rnorm</span>(<span class="at">n=</span>case2<span class="sc">/</span><span class="dv">2</span>), <span class="fu">rnorm</span>(<span class="at">n=</span>case2<span class="sc">/</span><span class="dv">2</span>, <span class="at">mean=</span><span class="sc">-</span>effSize)),</span>
+<span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a>                <span class="fu">cbind</span>(<span class="fu">rnorm</span>(<span class="at">n=</span>case3<span class="sc">/</span><span class="dv">4</span>, <span class="at">mean=</span><span class="sc">-</span>effSize), <span class="fu">rnorm</span>(<span class="at">n=</span>case3<span class="sc">/</span><span class="dv">4</span>, <span class="at">mean=</span>effSize)),</span>
+<span id="cb13-19"><a href="#cb13-19" tabindex="-1"></a>                <span class="fu">cbind</span>(<span class="fu">rnorm</span>(<span class="at">n=</span>case3<span class="sc">/</span><span class="dv">4</span>, <span class="at">mean=</span>effSize), <span class="fu">rnorm</span>(<span class="at">n=</span>case3<span class="sc">/</span><span class="dv">4</span>, <span class="at">mean=</span><span class="sc">-</span>effSize)),</span>
+<span id="cb13-20"><a href="#cb13-20" tabindex="-1"></a>                <span class="fu">cbind</span>(<span class="fu">rnorm</span>(<span class="at">n=</span>case3<span class="sc">/</span><span class="dv">4</span>, <span class="at">mean=</span>effSize), <span class="fu">rnorm</span>(<span class="at">n=</span>case3<span class="sc">/</span><span class="dv">4</span>, <span class="at">mean=</span>effSize)),</span>
+<span id="cb13-21"><a href="#cb13-21" tabindex="-1"></a>                <span class="fu">cbind</span>(<span class="fu">rnorm</span>(<span class="at">n=</span>case3<span class="sc">/</span><span class="dv">4</span>, <span class="at">mean=</span><span class="sc">-</span>effSize), <span class="fu">rnorm</span>(<span class="at">n=</span>case3<span class="sc">/</span><span class="dv">4</span>, <span class="at">mean=</span><span class="sc">-</span>effSize)))</span>
+<span id="cb13-22"><a href="#cb13-22" tabindex="-1"></a></span>
+<span id="cb13-23"><a href="#cb13-23" tabindex="-1"></a><span class="co"># intial starting values</span></span>
+<span id="cb13-24"><a href="#cb13-24" tabindex="-1"></a>maxMeans <span class="ot">=</span> <span class="fu">matrix</span>(<span class="at">data=</span><span class="fu">c</span>(<span class="dv">8</span>,<span class="dv">8</span>), <span class="at">nrow=</span><span class="dv">2</span>)</span>
+<span id="cb13-25"><a href="#cb13-25" tabindex="-1"></a>initMuList <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">matrix</span>(<span class="at">data=</span><span class="dv">0</span>, <span class="at">nrow=</span><span class="dv">2</span>, <span class="at">ncol=</span><span class="dv">1</span>), <span class="fu">matrix</span>(<span class="at">data=</span><span class="fu">runif</span>(<span class="at">n=</span><span class="dv">4</span>, <span class="at">min=</span><span class="dv">0</span>, <span class="at">max=</span><span class="fu">min</span>(maxMeans)), <span class="at">nrow=</span><span class="dv">2</span>, <span class="at">ncol=</span><span class="dv">2</span>), <span class="fu">matrix</span>(<span class="at">data=</span><span class="fu">runif</span>(<span class="at">n=</span><span class="dv">4</span>, <span class="at">min=</span><span class="dv">0</span>, <span class="at">max=</span><span class="fu">min</span>(maxMeans)), <span class="at">nrow=</span><span class="dv">2</span>, <span class="at">ncol=</span><span class="dv">2</span>), maxMeans)</span>
+<span id="cb13-26"><a href="#cb13-26" tabindex="-1"></a>initPiList <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="fl">0.82</span>), <span class="fu">c</span>(<span class="fl">0.02</span>, <span class="fl">0.02</span>),<span class="fu">c</span>(<span class="fl">0.02</span>, <span class="fl">0.02</span>), <span class="fu">c</span>(<span class="fl">0.1</span>))</span>
+<span id="cb13-27"><a href="#cb13-27" tabindex="-1"></a><span class="co"># fit the model</span></span>
+<span id="cb13-28"><a href="#cb13-28" tabindex="-1"></a>r_csmGmm <span class="ot">&lt;-</span> <span class="fu">symm_fit_ind_EM</span>(<span class="at">testStats =</span> repDat, <span class="at">initMuList =</span> initMuList, <span class="at">initPiList =</span> initPiList,</span>
+<span id="cb13-29"><a href="#cb13-29" tabindex="-1"></a>                                <span class="at">sameDirAlt=</span><span class="cn">TRUE</span>, <span class="at">checkpoint=</span><span class="cn">FALSE</span>)</span>
+<span id="cb13-30"><a href="#cb13-30" tabindex="-1"></a></span>
+<span id="cb13-31"><a href="#cb13-31" tabindex="-1"></a><span class="co"># rejections at q=0.1</span></span>
+<span id="cb13-32"><a href="#cb13-32" tabindex="-1"></a>r_outputDF <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Z1 =</span> repDat[, <span class="dv">1</span>], <span class="at">Z2 =</span> repDat[, <span class="dv">2</span>], <span class="at">origIdx =</span> <span class="dv">1</span><span class="sc">:</span>J,</span>
+<span id="cb13-33"><a href="#cb13-33" tabindex="-1"></a>                         <span class="at">lfdrValue=</span>r_csmGmm<span class="sc">$</span>lfdrResults) <span class="sc">%&gt;%</span></span>
+<span id="cb13-34"><a href="#cb13-34" tabindex="-1"></a>    <span class="fu">arrange</span>(lfdrValue) <span class="sc">%&gt;%</span></span>
+<span id="cb13-35"><a href="#cb13-35" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">lfdrAvg =</span> <span class="fu">cummean</span>(lfdrValue)) <span class="sc">%&gt;%</span></span>
+<span id="cb13-36"><a href="#cb13-36" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">Causal =</span> <span class="fu">ifelse</span>(origIdx <span class="sc">&gt;=</span> J <span class="sc">-</span> case3<span class="sc">/</span><span class="dv">2</span> <span class="sc">+</span> <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb13-37"><a href="#cb13-37" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">Rej =</span> <span class="fu">ifelse</span>(lfdrAvg <span class="sc">&lt;</span> <span class="fl">0.1</span>, <span class="dv">1</span>, <span class="dv">0</span>))</span>
+<span id="cb13-38"><a href="#cb13-38" tabindex="-1"></a></span>
+<span id="cb13-39"><a href="#cb13-39" tabindex="-1"></a><span class="co"># number of false rejections</span></span>
+<span id="cb13-40"><a href="#cb13-40" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">which</span>(r_outputDF<span class="sc">$</span>Causal <span class="sc">==</span> <span class="dv">0</span> <span class="sc">&amp;</span> r_outputDF<span class="sc">$</span>Rej <span class="sc">==</span> <span class="dv">1</span>))</span></code></pre></div>
+<pre><code>## [1] 2</code></pre>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="co"># number of true rejections</span></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">which</span>(r_outputDF<span class="sc">$</span>Causal <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;</span> r_outputDF<span class="sc">$</span>Rej <span class="sc">==</span> <span class="dv">1</span>))</span></code></pre></div>
+<pre><code>## [1] 33</code></pre>
+<p>Questions or novel applications? Please let me know! Contact
+information can be found in the package description.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
