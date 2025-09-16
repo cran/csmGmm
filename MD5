@@ -1,4 +1,4 @@
-74f2bd92472910c6b8971d070a15617d *DESCRIPTION
+05c6e4433771d6bddab3b129eeb37881 *DESCRIPTION
 fc877ef59e125804a12c3e8f1a67a1c0 *NAMESPACE
 f630df9edc23ef1a6739599b3c578dd2 *R/calc_dens_cor.R
 9546be06967236153abb5dbbc9c45fd0 *R/calc_dens_ind.R
@@ -13,9 +13,9 @@ debc7c4295c1ed3c5f2dd118c8006507 *R/symm_fit_cor_rho.R
 982eb0127331998f861d1016ee465cf2 *R/symm_fit_ind_noAssumption.R
 d97eace06aac4bd95a6f0771621e28f1 *README.md
 829dc98a5c40c31e7a355bc1284e22e4 *build/vignette.rds
-b06162114718368d2605bb35c832e55e *inst/doc/csmGmm_tutorial.R
-18a677a603ffe81af67b0666bd126f7c *inst/doc/csmGmm_tutorial.Rmd
-490bcd42cb9a4c1d13e396e2cf2c0a08 *inst/doc/csmGmm_tutorial.html
+fa698c992e1121737d219dba2c94e7b9 *inst/doc/csmGmm_tutorial.R
+0bc078ade7c4db05fe75a427b120a0ed *inst/doc/csmGmm_tutorial.Rmd
+c7629250a555b8dbb4be1302a1e6fa19 *inst/doc/csmGmm_tutorial.html
 4806f7ab81819ee6fcc8f33841e90b06 *man/calc_dens_cor.Rd
 36c6a4127ac73a99055a113b341438a3 *man/calc_dens_ind_2d.Rd
 695d349f54b506cbd88573af535712c0 *man/calc_dens_ind_3d.Rd
@@ -30,4 +30,4 @@ f565e2f08e83dd837f97fd437e165da7 *man/symm_fit_cor_EM.Rd
 f7150269416a99c38d2ba09818b7b02c *man/symm_fit_cor_EM_rho.Rd
 6763c7f0ecfb570440c0e37195f7351b *man/symm_fit_ind_EM.Rd
 f54dc0524a2516e55c95cf44bbc768c5 *man/symm_fit_ind_EM_noAssumption.Rd
-18a677a603ffe81af67b0666bd126f7c *vignettes/csmGmm_tutorial.Rmd
+0bc078ade7c4db05fe75a427b120a0ed *vignettes/csmGmm_tutorial.Rmd
